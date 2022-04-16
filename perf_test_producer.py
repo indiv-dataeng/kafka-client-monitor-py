@@ -13,7 +13,7 @@ ACK = 1
 WINDOW_INTERVAL_MS = 5000
 MSG_BATCH_SIZE = 5
 # Estimated/Targeted throughput (message count per millisecond)
-# Set as <= 0 to allow maximum throughput
+# Set as < 0 to allow maximum throughput
 TARGET_THROUGHPUT_MSGPMS = 0.500
 SLEEP_STEP_MS = 1 / TARGET_THROUGHPUT_MSGPMS
 # Minimum cumulative sleep deficit to trigger sleep (2 times of OS system clock tolerance/precision is well enough)
@@ -28,10 +28,8 @@ def randbytes(size):
     return bytearray(random.getrandbits(8) for _ in range(size))
 
 
-producer = KafkaProducer(
-    bootstrap_servers=SERVERS, acks=ACK)
+producer = KafkaProducer(bootstrap_servers=SERVERS, acks=ACK)
 
-start_ms = current_milli_time()
 start_window_ms = current_milli_time()
 sleep_deficit_ms = 0
 window_latencies = list()
@@ -62,12 +60,9 @@ while True:
         total_bytes = window_msg_num * RECORD_SIZE
         latency_mean = statistics.fmean(window_latencies)
         latency_sd = statistics.stdev(window_latencies)
-        print("Sent %d records (elapsed: %dms) of total size = %dB" %
-              (window_msg_num, elapsed_ms, total_bytes))
-        print("\tLatency: %.3fms AVG, %.3fms SD" %
-              (latency_mean, latency_sd))
-        print("\tThroughput: %.3fmsg/ms, %.3fB/ms" %
-              (window_msg_num / elapsed_ms, total_bytes / elapsed_ms))
+        print("Sent %d records (elapsed: %dms) of total size = %dB" % (window_msg_num, elapsed_ms, total_bytes))
+        print("\tLatency: %.3fms AVG, %.3fms SD" % (latency_mean, latency_sd))
+        print("\tThroughput: %.3fmsg/ms, %.3fB/ms" % (window_msg_num / elapsed_ms, total_bytes / elapsed_ms))
         window_latencies = list()
         start_window_ms = sent_record_ms
         window_msg_num = 0
